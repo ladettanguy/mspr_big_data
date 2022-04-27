@@ -1,12 +1,15 @@
 import datetime
+import http
 from typing import Any, Dict
 
+import jwt
 from flask_api import status
 from flask import Flask, request
 import json
 
 import dao_mysql as mysql
-from models import Reservation
+from models import Utilisateur
+from models.reservation import Reservation
 
 app = Flask(__name__)
 
@@ -27,6 +30,29 @@ def hello():
         return status.HTTP_400_BAD_REQUEST
     mysql.add_reservation(Reservation(0, parking.id_parking, utilisateur.id_utilisateur, datetime.datetime.now()))
     return {'success': True}
+
+
+@app.route("/login", methods=['POST'])
+def login():
+    if not request.method == 'POST':
+        return http.HTTPStatus.METHOD_NOT_ALLOWED
+    dict_info: Dict[str, str] = {
+        'email': "",
+        'pwd': "",
+    }
+    dict_info.update(json.loads(request.get_json()))
+    if not dict_info["email"]:
+        return http.HTTPStatus.BAD_REQUEST
+    user: Utilisateur = mysql.get_utilisateur_from_email(dict_info["email"])
+    if user.pwd == hash(dict_info['pwd']):
+        return http.HTTPStatus.UNAUTHORIZED
+    encoded_jwt = jwt.encode({"id": user.id_utilisateur, "utilisateur": user.email}, "secret", algorithm="HS256")
+    print(encoded_jwt)
+    return {
+        "success": True,
+        "user": {"email": None},
+        "jwt": encoded_jwt,
+    }
 
 
 if __name__ == "__main__":

@@ -1,18 +1,17 @@
-from plistlib import Dict
-from typing import Any
+from typing import Any, Dict
 from multipledispatch import dispatch
 
 
 class Parking:
 
-    @dispatch(int, str, str, str)
-    def __init__(self, id_p: int, nom: str, ville: str, url_link: str):
-        self.id_parking = id_p
+    @dispatch(str, str, str)
+    def __init__(self, nom: str, ville: str, url_link: str, id_parking: int = -1):
+        self.id_parking = id_parking
         self.nom = nom
         self.ville = ville
         self.lien_api_parking = url_link
 
-    @dispatch(Dict[str, Any])
+    @dispatch(dict)
     def __init__(self, dict_info: Dict[str, Any]):
         self.id_parking = dict_info.get("id_parking", None)
         self.nom = dict_info.get("nom", None)
