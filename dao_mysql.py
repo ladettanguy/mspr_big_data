@@ -112,12 +112,3 @@ def get_utilisateur_from_email(email: str):
     with _get_connection() as connection:
         result = _make_request(connection, a)
         return Utilisateur(result[0])
-
-
-u1 = Utilisateur('s@gmail.com', 'hauzehrazhjk')
-p1 = Parking('parking1', 'montpellier', "https//niquetamere.com/")
-add_utilisateur(u1)
-add_parking(p1)
-print(u1.id_utilisateur)
-print(p1.id_parking)
-add_reservation(u1, p1)
