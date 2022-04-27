@@ -1,6 +1,5 @@
 import datetime
-import http
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import jwt
 from flask import Flask, request
@@ -11,6 +10,7 @@ from models import Utilisateur
 from models.reservation import Reservation
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "ABC"
 
 
 @app.route("/reserve", methods=["POST"])
@@ -34,24 +34,42 @@ def hello():
 @app.route("/login", methods=['POST'])
 def login():
     if not request.method == 'POST':
-        return http.HTTPStatus.METHOD_NOT_ALLOWED
-    dict_info: Dict[str, str] = {
-        'email': "",
-        'pwd': "",
+        return "Method Not Allowed", 405
+    dict_info: Dict[str, Optional[str]] = {
+        'email': None,
+        'pwd': None,
     }
-    dict_info.update(json.loads(request.get_json()))
-    if not dict_info["email"]:
-        return http.HTTPStatus.BAD_REQUEST
+    dict_info.update(request.json)
+    if dict_info["email"] is None:
+        return "Unauthorized", 401
     user: Utilisateur = mysql.get_utilisateur_from_email(dict_info["email"])
-    if user.pwd == hash(dict_info['pwd']):
-        return http.HTTPStatus.UNAUTHORIZED
+    if not user or user.pwd != dict_info['pwd']:
+        print(user.pwd)
+        print(dict_info['pwd'])
+        return "Unauthorized", 401
     encoded_jwt = jwt.encode({"id": user.id_utilisateur, "utilisateur": user.email}, "secret", algorithm="HS256")
-    print(encoded_jwt)
-    return {
+    return json.dumps({
         "success": True,
-        "user": {"email": None},
-        "jwt": encoded_jwt,
-    }
+        "user": {"email": user.email},
+        "jwt": encoded_jwt.decode('UTF-8'),
+    })
+
+
+@app.route("/register", methods=['POST'])
+def register():
+    if not request.method == "POST":
+        return "Method Not Allowed", 405
+    info = request.json
+    email = info.get("email", None)
+    pwd = info.get("pwd", None)
+    if email is None or pwd is None:
+        return "Bad request", 400
+    user = mysql.get_utilisateur_from_email(email)
+    if user.email is None:
+        mysql.add_utilisateur(Utilisateur(email, pwd))
+        return json.dumps({"success": True})
+    else:
+        return json.dumps({"error": "email already taken"}), 401
 
 
 if __name__ == "__main__":

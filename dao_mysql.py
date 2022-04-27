@@ -3,7 +3,7 @@ import os
 
 import pymysql
 
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 from pymysql.connections import Connection
 from multipledispatch import dispatch
 from models import Utilisateur, Parking
@@ -104,11 +104,13 @@ def get_parking(id_parking: int):
         return Parking(result[0])
 
 
-def get_utilisateur_from_email(email: str):
+def get_utilisateur_from_email(email: str) -> Optional[Utilisateur]:
     def a(_, cur):
         cur.execute("SELECT * FROM utilisateur WHERE email=%s", [email])
         return _get_dict_from_row(cur.fetchall())
 
     with _get_connection() as connection:
         result = _make_request(connection, a)
-        return Utilisateur(result[0])
+        if result:
+            return Utilisateur(result[0])
+        return None
