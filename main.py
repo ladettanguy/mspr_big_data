@@ -13,8 +13,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = "ABC"
 
 
-@app.route("/reserve", methods=["POST"])
+@app.route('/')
 def hello():
+    return "Hello world !"
+
+
+@app.route("/reserve", methods=["POST"])
+def reserve():
     json_request: str = request.json
     detail: Dict[str, Any] = json.loads(json_request)
     email = detail.get('email', None)
@@ -44,10 +49,8 @@ def login():
         return "Unauthorized", 401
     user: Utilisateur = mysql.get_utilisateur_from_email(dict_info["email"])
     if not user or user.pwd != dict_info['pwd']:
-        print(user.pwd)
-        print(dict_info['pwd'])
         return "Unauthorized", 401
-    encoded_jwt = jwt.encode({"id": user.id_utilisateur, "utilisateur": user.email}, "secret", algorithm="HS256")
+    encoded_jwt = jwt.encode({"id": user.id_utilisateur, "utilisateur": user.email}, app.config['SECRET_KEY'], algorithm="HS256")
     return json.dumps({
         "success": True,
         "user": {"email": user.email},
