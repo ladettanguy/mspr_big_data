@@ -18,7 +18,7 @@ def hello():
     return "Hello world !"
 
 
-@app.route("/reserve", methods=["POST"])
+@app.route("/reserve", methods=["POST", "GET"])
 def reserve():
     json_request: str = request.json
     detail: Dict[str, Any] = json.loads(json_request)
@@ -36,7 +36,7 @@ def reserve():
     return {'success': True}
 
 
-@app.route("/login", methods=['POST'])
+@app.route("/login", methods=['POST', 'GET'])
 def login():
     if not request.method == 'POST':
         return "Method Not Allowed", 405
@@ -58,7 +58,7 @@ def login():
     })
 
 
-@app.route("/register", methods=['POST'])
+@app.route("/register", methods=['POST', 'GET'])
 def register():
     if not request.method == "POST":
         return "Method Not Allowed", 405
